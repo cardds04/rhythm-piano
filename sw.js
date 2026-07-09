@@ -1,4 +1,4 @@
-const CACHE_NAME = "rhythm-piano-v2";
+const CACHE_NAME = "rhythm-piano-v3";
 const ASSETS = [
   "./",
   "./index.html",

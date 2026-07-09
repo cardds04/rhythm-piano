@@ -969,9 +969,11 @@
     cancelAnimationFrame(raf);
     clearListenTimers();
     state = "idle";
+    score = 100;
     $("board").classList.remove("playing");
     $("notes").innerHTML = "";
-    $("finishText").textContent = score + "점";
+    $("score").textContent = "100점";
+    $("finishText").textContent = "100점";
     $("finish").classList.add("on");
     $("ready").style.display = "grid";
     $("ready").innerHTML = "피아노 앞에<br>패드를 놓아요<small>화면을 터치하세요</small>";
