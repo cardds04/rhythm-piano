@@ -1,0 +1,972 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#fff3c4">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="리듬피아노">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>리듬피아노</title>
+<style>
+  * { box-sizing: border-box; word-break: keep-all; -webkit-tap-highlight-color: transparent; user-select: none; }
+  html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; overscroll-behavior: none; }
+  body {
+    background: #fff3c4;
+    color: #151923;
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    touch-action: manipulation;
+  }
+  button { font: inherit; min-width: 0; }
+  .app {
+    width: 100vw;
+    height: 100vh;
+    display: grid;
+    grid-template-rows: auto auto auto 1fr;
+    gap: 10px;
+    padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
+  }
+  .top {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    align-items: center;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+  .logo {
+    width: 50px;
+    height: 50px;
+    border-radius: 17px;
+    display: grid;
+    place-items: center;
+    background: #536dfe;
+    color: #fff;
+    font-size: 30px;
+    font-weight: 1000;
+    box-shadow: 0 8px 18px rgba(44, 62, 180, .22);
+  }
+  h1 {
+    margin: 0;
+    font-size: clamp(26px, 4.6vw, 46px);
+    line-height: 1;
+    letter-spacing: 0;
+  }
+  .hint {
+    margin-top: 4px;
+    color: #596273;
+    font-size: clamp(14px, 2vw, 20px);
+    font-weight: 900;
+  }
+  .song-panel {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 10px;
+    align-items: stretch;
+    min-width: 0;
+  }
+  .page-btn {
+    min-width: 76px;
+    border: 0;
+    border-radius: 20px;
+    background: #fff;
+    color: #151923;
+    font-size: clamp(18px, 2.4vw, 25px);
+    font-weight: 1000;
+    box-shadow: 0 5px 14px rgba(37, 45, 65, .08);
+  }
+  .page-btn:disabled {
+    opacity: .35;
+    box-shadow: none;
+  }
+  .song-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
+    min-width: 0;
+  }
+  .song-icon {
+    min-height: 84px;
+    border: 3px solid transparent;
+    border-radius: 20px;
+    background: #fff;
+    color: #151923;
+    font-weight: 1000;
+    box-shadow: 0 5px 14px rgba(37, 45, 65, .08);
+  }
+  .song-icon.on {
+    border-color: #536dfe;
+    background: #eaf0ff;
+  }
+  .song-icon .icon {
+    display: block;
+    font-size: clamp(31px, 4vw, 44px);
+    line-height: 1;
+    margin-bottom: 5px;
+  }
+  .song-icon .title {
+    display: block;
+    font-size: clamp(15px, 2vw, 22px);
+    line-height: 1.12;
+  }
+  .controls {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+  .control {
+    min-width: 92px;
+    min-height: 54px;
+    border: 0;
+    border-radius: 18px;
+    color: #fff;
+    font-size: clamp(19px, 2.6vw, 28px);
+    font-weight: 1000;
+    box-shadow: 0 7px 16px rgba(38, 48, 75, .14);
+  }
+  .start { background: #22ad67; }
+  .listen { background: #ff873c; }
+  .speed-panel {
+    display: grid;
+    grid-template-columns: auto repeat(4, minmax(76px, 1fr));
+    gap: 8px;
+    align-items: center;
+  }
+  .speed-label {
+    color: #596273;
+    font-size: clamp(16px, 2vw, 22px);
+    font-weight: 1000;
+    white-space: nowrap;
+  }
+  .speed-btn {
+    min-height: 48px;
+    border: 3px solid transparent;
+    border-radius: 17px;
+    background: #fff;
+    color: #151923;
+    font-size: clamp(15px, 2vw, 22px);
+    font-weight: 1000;
+    box-shadow: 0 5px 14px rgba(37, 45, 65, .08);
+  }
+  .speed-btn.on {
+    border-color: #22ad67;
+    background: #dff8ea;
+    color: #0c6b3d;
+  }
+  .board {
+    position: relative;
+    min-height: 0;
+    border-radius: 30px;
+    overflow: hidden;
+    background: #fffdf6;
+    box-shadow: 0 14px 32px rgba(47, 55, 80, .14);
+  }
+  .lanes {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+  }
+  .lane {
+    position: relative;
+    border-right: 2px solid rgba(23, 31, 45, .08);
+  }
+  .lane:last-child { border-right: 0; }
+  .lane::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: .15;
+  }
+  .lane:nth-child(1)::before { background: #ff7777; }
+  .lane:nth-child(2)::before { background: #ffb24d; }
+  .lane:nth-child(3)::before { background: #ffe45c; }
+  .lane:nth-child(4)::before { background: #8ee87f; }
+  .lane:nth-child(5)::before { background: #70ceff; }
+  .lane:nth-child(6)::before { background: #a99cff; }
+  .lane:nth-child(7)::before { background: #ff94d3; }
+  .hit-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 128px;
+    height: 8px;
+    background: #151923;
+    box-shadow: 0 0 0 5px rgba(21, 25, 35, .08);
+    z-index: 4;
+    opacity: 0;
+    transition: opacity .2s ease;
+  }
+  .hit-line.boom {
+    animation: lineBoom .34s ease;
+  }
+  @keyframes lineBoom {
+    0% { transform: scaleY(1); background: #151923; }
+    45% { transform: scaleY(6); background: #22ad67; box-shadow: 0 0 0 12px rgba(34, 173, 103, .22), 0 0 42px rgba(34, 173, 103, .7); }
+    100% { transform: scaleY(1); background: #151923; }
+  }
+  .hit-label {
+    position: absolute;
+    left: 50%;
+    bottom: 141px;
+    transform: translateX(-50%);
+    padding: 8px 18px;
+    border-radius: 999px;
+    background: #151923;
+    color: #fff;
+    font-size: clamp(17px, 2.4vw, 24px);
+    font-weight: 1000;
+    z-index: 5;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity .2s ease;
+  }
+  .board.playing .hit-line,
+  .board.playing .hit-label {
+    opacity: 1;
+  }
+  .note {
+    position: absolute;
+    left: calc((var(--lane) - 1) * 12.5% + .9%);
+    width: 10.7%;
+    height: 70px;
+    border-radius: 22px;
+    display: grid;
+    place-items: center;
+    color: #101820;
+    font-size: clamp(34px, 6vw, 62px);
+    line-height: 1;
+    font-weight: 1000;
+    box-shadow: inset 0 -9px 0 rgba(0,0,0,.1), 0 8px 18px rgba(26, 35, 60, .16);
+    z-index: 3;
+    transform: translateY(-120px);
+  }
+  .n1 { background: #ff7f87; }
+  .n2 { background: #ffc25d; }
+  .n3 { background: #ffe660; }
+  .n4 { background: #94ed83; }
+  .n5 { background: #78d7ff; }
+  .n6 { background: #b3a3ff; }
+  .n7 { background: #ff9bd8; }
+  .n8 { background: #ffc7ec; }
+  .bottom {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 128px;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    background: #1f2937;
+    border-top: 4px solid #111827;
+    z-index: 6;
+    padding: 22px 10px 8px;
+    gap: 3px;
+  }
+  .label {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 5px;
+    padding-bottom: 10px;
+    border: 2px solid #cfd4dc;
+    border-bottom-width: 5px;
+    border-radius: 0 0 14px 14px;
+    background: linear-gradient(#ffffff 0%, #f7f7f2 62%, #e8e8df 100%);
+    color: #101820;
+    font-weight: 1000;
+    box-shadow: inset 0 -10px 0 rgba(0,0,0,.05), 0 4px 0 rgba(17,24,39,.2);
+  }
+  .label:last-child { border-right: 0; }
+  .label::before {
+    content: "";
+    position: absolute;
+    top: -26px;
+    right: -17%;
+    width: 32%;
+    height: 46px;
+    border-radius: 0 0 9px 9px;
+    background: linear-gradient(#111827, #020617);
+    box-shadow: inset 0 -8px 0 rgba(255,255,255,.05), 0 4px 7px rgba(0,0,0,.35);
+    z-index: 3;
+  }
+  .label[data-note="3"]::before,
+  .label[data-note="7"]::before,
+  .label[data-note="8"]::before {
+    display: none;
+  }
+  .num { font-size: clamp(31px, 4.8vw, 50px); line-height: .85; }
+  .name { font-size: clamp(15px, 2.2vw, 24px); }
+  .label.hit {
+    background: linear-gradient(#8ff0b7 0%, #22ad67 100%);
+    border-color: #0d8c4d;
+    color: #fff;
+    animation: keyGlow .42s ease;
+    box-shadow: inset 0 0 0 7px rgba(255,255,255,.35), 0 -10px 28px rgba(34, 173, 103, .4);
+  }
+  @keyframes keyGlow {
+    0% { transform: scale(1); }
+    45% { transform: scale(1.08); }
+    100% { transform: scale(1); }
+  }
+  .burst {
+    position: absolute;
+    left: calc((var(--lane) - 1) * 12.5% + 6.25%);
+    bottom: 128px;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9;
+    transform: translate(-50%, 50%) scale(.3);
+    animation: burst .62s ease-out forwards;
+  }
+  .burst::before,
+  .burst::after {
+    content: "";
+    position: absolute;
+    inset: 18px;
+    border-radius: 50%;
+    border: 13px solid #22ad67;
+  }
+  .burst::after {
+    inset: 48px;
+    border-color: #ffe45c;
+    border-width: 15px;
+  }
+  .burst i {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 18px;
+    height: 54px;
+    border-radius: 999px;
+    background: var(--spark);
+    transform-origin: 50% 96px;
+    transform: translate(-50%, -50%) rotate(var(--angle));
+    box-shadow: 0 0 16px var(--spark);
+  }
+  @keyframes burst {
+    0% { opacity: 1; transform: translate(-50%, 50%) scale(.18); filter: saturate(1.5); }
+    55% { opacity: 1; transform: translate(-50%, 50%) scale(1.06); filter: saturate(1.7); }
+    100% { opacity: 0; transform: translate(-50%, 50%) scale(1.55); filter: saturate(1.2); }
+  }
+  .pop-word {
+    position: absolute;
+    left: calc((var(--lane) - 1) * 12.5% + 6.25%);
+    bottom: 178px;
+    transform: translateX(-50%);
+    z-index: 10;
+    padding: 8px 18px;
+    border-radius: 999px;
+    background: #151923;
+    color: #fff;
+    font-size: clamp(22px, 4vw, 42px);
+    font-weight: 1000;
+    pointer-events: none;
+    animation: popWord .6s ease-out forwards;
+  }
+  @keyframes popWord {
+    0% { opacity: 0; transform: translate(-50%, 18px) scale(.5); }
+    35% { opacity: 1; transform: translate(-50%, -8px) scale(1.15); }
+    100% { opacity: 0; transform: translate(-50%, -48px) scale(1); }
+  }
+  .ready {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 106px;
+    display: grid;
+    place-items: center;
+    background: rgba(255, 253, 246, .8);
+    color: #151923;
+    font-size: clamp(42px, 8vw, 82px);
+    line-height: 1.12;
+    font-weight: 1000;
+    text-align: center;
+    z-index: 7;
+    padding: 24px;
+  }
+  .ready small {
+    display: block;
+    margin-top: 12px;
+    color: #596273;
+    font-size: clamp(20px, 3vw, 34px);
+  }
+  .score {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    min-width: 92px;
+    min-height: 48px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    background: #edf2ff;
+    color: #3152d4;
+    font-size: clamp(20px, 3vw, 30px);
+    font-weight: 1000;
+    z-index: 5;
+  }
+  .finish {
+    display: none;
+    position: fixed;
+    inset: 0;
+    place-items: center;
+    background: rgba(255, 243, 196, .94);
+    z-index: 20;
+    padding: 24px;
+  }
+  .finish.on { display: grid; }
+  .finish-card {
+    width: min(420px, 100%);
+    border-radius: 34px;
+    background: #fff;
+    padding: 30px 24px;
+    text-align: center;
+    box-shadow: 0 20px 46px rgba(31, 42, 68, .18);
+  }
+  .stars { font-size: 62px; line-height: 1; color: #ffbd2f; }
+  .finish-card h2 { margin: 12px 0 8px; font-size: 42px; line-height: 1.1; }
+  .finish-card p { margin: 0 0 18px; color: #596273; font-size: 24px; font-weight: 900; }
+  .again {
+    width: 100%;
+    min-height: 76px;
+    border: 0;
+    border-radius: 24px;
+    background: #536dfe;
+    color: #fff;
+    font-size: 28px;
+    font-weight: 1000;
+  }
+  @media (orientation: portrait) {
+    .app { grid-template-rows: auto auto auto 1fr; padding: 10px; }
+    .top {
+      grid-template-columns: 1fr auto;
+    }
+    .logo { width: 44px; height: 44px; border-radius: 15px; font-size: 26px; }
+    .song-panel {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+    .song-grid {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      order: 1;
+    }
+    .speed-panel {
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .speed-label {
+      display: none;
+    }
+    .song-icon {
+      min-height: 72px;
+      border-radius: 17px;
+    }
+    .page-btn {
+      min-height: 44px;
+    }
+    #prevPage { order: 2; }
+    #nextPage { order: 3; }
+    .control { min-width: 72px; min-height: 48px; border-radius: 16px; }
+    .note { height: 58px; border-radius: 18px; }
+    .hit-line { bottom: 108px; }
+    .hit-label { bottom: 121px; }
+    .bottom { height: 108px; padding-top: 18px; }
+    .label::before { top: -18px; height: 42px; }
+    .burst { bottom: 108px; }
+    .pop-word { bottom: 152px; }
+    .ready { bottom: 108px; }
+    .score { min-width: 74px; min-height: 42px; }
+  }
+</style>
+</head>
+<body>
+  <div class="app">
+    <header class="top">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">♪</div>
+        <div>
+          <h1>리듬피아노</h1>
+          <div class="hint">블록이 선에 오면 쳐요</div>
+        </div>
+      </div>
+      <div class="controls">
+        <button class="control listen" id="listenBtn">듣기</button>
+        <button class="control start" id="startBtn">시작</button>
+      </div>
+    </header>
+
+    <section class="song-panel" aria-label="노래 고르기">
+      <button class="page-btn" id="prevPage">이전</button>
+      <div class="song-grid" id="songGrid"></div>
+      <button class="page-btn" id="nextPage">다음</button>
+    </section>
+
+    <section class="speed-panel" aria-label="속도 조절">
+      <div class="speed-label">속도</div>
+      <button class="speed-btn" data-speed="0.75">느리게</button>
+      <button class="speed-btn on" data-speed="1">보통</button>
+      <button class="speed-btn" data-speed="1.2">빠르게</button>
+      <button class="speed-btn" data-speed="1.45">아주빠르게</button>
+    </section>
+
+    <main class="board" id="board">
+      <div class="lanes" aria-hidden="true">
+        <div class="lane"></div><div class="lane"></div><div class="lane"></div><div class="lane"></div>
+        <div class="lane"></div><div class="lane"></div><div class="lane"></div><div class="lane"></div>
+      </div>
+      <div class="score" id="score">0점</div>
+      <div class="hit-label">여기서 쳐요</div>
+      <div class="hit-line"></div>
+      <div id="notes"></div>
+      <div class="bottom" id="labels"></div>
+      <div class="ready" id="ready">피아노 앞에<br>패드를 놓아요<small>화면을 터치하세요</small></div>
+    </main>
+  </div>
+
+  <div class="finish" id="finish">
+    <div class="finish-card">
+      <div class="stars">★ ★ ★</div>
+      <h2>잘했어요!</h2>
+      <p id="finishText">끝까지 쳤어요.</p>
+      <button class="again" id="againBtn">확인</button>
+    </div>
+  </div>
+
+<script>
+  var names = ["도", "레", "미", "파", "솔", "라", "시", "높도"];
+  var freqs = [261.63, 293.66, 329.63, 349.23, 392, 440, 493.88, 523.25];
+  var colors = ["n1", "n2", "n3", "n4", "n5", "n6", "n7", "n8"];
+  function melody(text) {
+    return text.trim().split(/\s+/).map(function (token) {
+      var parts = token.split(":");
+      return { n: Number(parts[0]), d: Number(parts[1] || 1) };
+    });
+  }
+  var songs = [
+    { icon: "⭐", name: "작은별", bpm: 88, score: melody("1 1 5 5 6 6 5:2 4 4 3 3 2 2 1:2 5 5 4 4 3 3 2:2 5 5 4 4 3 3 2:2 1 1 5 5 6 6 5:2 4 4 3 3 2 2 1:4") },
+    { icon: "🐉", name: "퍼프재키", bpm: 88, score: melody("1 3 5 6 5 3 1:2 2 4 6 5 4 2:2 1 3 5 8 7 6 5:2 4 3 2 1:4 5 6 5 3 4 5 4 2 1:4") },
+    { icon: "✈️", name: "비행기", bpm: 96, score: melody("3 2 1 2 3 3 3:2 2 2 2:2 3 5 5:2 3 2 1 2 3 3 3 3 2 2 3 2 1:4") },
+    { icon: "🦋", name: "나비야", bpm: 90, score: melody("5 3 3:2 4 2 2:2 1 2 3 4 5 5 5:2 5 3 3:2 4 2 2:2 1 3 5 5 1:4") },
+    { icon: "👬", name: "프레르", bpm: 92, score: melody("1 2 3 1 1 2 3 1 3 4 5:2 3 4 5:2 5 6 5 4 3 1 5 6 5 4 3 1 1 5 1:2 1 5 1:4") },
+    { icon: "🌉", name: "런던다리", bpm: 94, score: melody("5 6 5 4 3 4 5:2 2 3 4:2 3 4 5:2 5 6 5 4 3 4 5:2 2:2 5:2 1:4") },
+    { icon: "😊", name: "환희", bpm: 92, score: melody("3 3 4 5 5 4 3 2 1 1 2 3 3:1 2:1 2:2 3 3 4 5 5 4 3 2 1 1 2 3 2:1 1:1 1:4") },
+    { icon: "🎄", name: "징글벨", bpm: 106, score: melody("3 3 3:2 3 3 3:2 3 5 1 2 3:4 4 4 4 4 3 3 3 3 2 2 3 2:2 5:2 3 3 3:2 3 3 3:2 3 5 1 2 3:4 4 4 4 4 3 3 3 5 5 4 2 1:4") },
+    { icon: "🚣", name: "노저어", bpm: 82, score: melody("1 1 1:1.5 2:.5 3:2 3:1.5 2:.5 3:1.5 4:.5 5:4 8:.5 8:.5 8:.5 5:.5 5:.5 5:.5 3:.5 3:.5 3:.5 1:.5 1:.5 1:.5 5:1.5 4:.5 3:1.5 2:.5 1:4") },
+    { icon: "🌙", name: "달빛", bpm: 82, score: melody("1 1 1 2 3:2 2:2 1 3 2 2 1:4 1 1 1 2 3:2 2:2 1 3 2 2 1:4") },
+    { icon: "🎺", name: "성자들", bpm: 92, score: melody("1 3 4 5:2 1 3 4 5:2 1 3 4 5 3 1 3 2:4 3 3 2 1 1:2 3 5 5 4 3 4 5:4 1 3 4 5 3 1 2 1:4") },
+    { icon: "🍞", name: "빵노래", bpm: 88, score: melody("3 2 1:2 3 2 1:2 1 1 1 1 2 2 2 2 3 2 1:4 3 2 1:2 3 2 1:2 1 1 1 1 2 2 2 2 3 2 1:4") },
+    { icon: "🔔", name: "종소리", bpm: 86, score: melody("5 5 3 1 5 5 3 1 2 3 4 5:2 5 5 3 1 5 5 3 1 2 3 4 5:4") },
+    { icon: "🇺🇸", name: "양키", bpm: 98, score: melody("1 1 2 3 1 3 2 5 1 1 2 3 1:2 7:1 1:2 1 1 2 3 4 3 2 1 7 5 6 7 1:4 5 1 2 3 4 3 2 1 7 5 6 7 1:4") },
+    { icon: "🚂", name: "기차", bpm: 98, score: melody("1 1 2 2 3 3 4 4 5:2 5:2 4 4 3 3 2 2 1:4 1 1 2 2 3 3 4 4 5:2 5:2 4 4 3 3 2 2 1:4") },
+    { icon: "🌈", name: "무지개", bpm: 84, score: melody("1 2 3 4 5 6 7 8:2 8 7 6 5 4 3 2 1:2 1 3 5 8 7 5 3 1:4") },
+    { icon: "👏", name: "손뼉", bpm: 100, score: melody("1 1 1 3 3 3 5 5 5 3 1:2 2 2 2 4 4 4 5 5 5 4 2:2 1 1 1 3 3 3 5 5 5 3 1:4") },
+    { icon: "🐇", name: "토끼뜀", bpm: 102, score: melody("1 3 1 3 5 3 5 6 5 3 1:2 1 2 1 2 3 2 3 5 3 2 1:4 5 3 1 3 5 6 5 3 1:4") },
+    { icon: "☔", name: "빗방울", bpm: 92, score: melody("5 3 5 3 4 2 4 2 3 1 3 1:2 5 4 3 2 1 2 3 4 5:2 5 3 5 3 4 2 4 2 1:4") },
+    { icon: "🌞", name: "해님", bpm: 88, score: melody("1 3 5 5 6 5 3 2 3 4 5 1:2 1 2 3 5 6 5 4 3 2 1:4 1 3 5 6 5 3 1:4") },
+    { icon: "🌱", name: "새싹", bpm: 84, score: melody("1 2 1 3 2 4 3 5 4 6 5:2 5 4 3 2 1:4 1 2 3 4 5 4 3 2 1:4") },
+    { icon: "🐟", name: "물고기", bpm: 90, score: melody("3 2 1 3 2 1 4 3 2 5 4 3:2 5 4 3 2 1:4 1 2 3 4 5 4 3 2 1:4") },
+    { icon: "🎈", name: "풍선", bpm: 88, score: melody("1 3 5 6 5 3 1:2 2 4 6 5 3 1:2 1 2 3 4 5:2 5 4 3 2 1:4") },
+    { icon: "🌼", name: "꽃길", bpm: 86, score: melody("1 2 4 5 4 2 1:2 3 4 6 5 3 1:2 1 3 5 6 5 3 1:4 5 4 3 2 1:4") },
+    { icon: "🎡", name: "놀이터", bpm: 98, score: melody("1 3 1 3 5 3 5 6 5 3 1:2 2 4 2 4 6 4 6 5 4 2 1:2 1 3 5 6 5 3 1:4") },
+    { icon: "🚶", name: "산책", bpm: 82, score: melody("1 2 3 2 1:2 1 2 3 4 3 2 1:2 3 4 5 4 3 2 1:4 1 2 3 2 1:4") },
+    { icon: "🍬", name: "사탕", bpm: 94, score: melody("1 1 3 3 5 5 3:2 2 2 4 4 5 5 4:2 3 3 2 2 1:4 1 3 5 3 1:4") },
+    { icon: "💨", name: "바람", bpm: 80, score: melody("6 5 4 3 2 3 4 5 6:2 5 3 1:2 2 3 4 5 4 3 2 1:4 6 5 4 3 2 1:4") },
+    { icon: "🌀", name: "빙글", bpm: 96, score: melody("1 2 3 1 2 3 4 2 3 4 5 3:2 1 3 5 3 1:4 5 4 3 2 1:4") },
+    { icon: "🧺", name: "소풍", bpm: 88, score: melody("1 2 3 5 5 6 5 4 3 2 1:2 1 3 5 6 5 4 3 1:2 1 2 3 4 5 4 3 2 1:4") },
+    { icon: "👋", name: "끝인사", bpm: 82, score: melody("5 4 3 2 1:2 1 2 3 4 5:2 5 3 1:2 1:4 5 4 3 2 1:4") }
+  ];
+  var extraIcons = ["🐣", "🍎", "🍓", "🍌", "🍇", "🚗", "🚀", "⛵", "🏀", "🎁", "🌻", "🌊", "☁️", "⛄", "🍀", "🧸", "🎲", "🎯", "🪁", "🏰"];
+  var extraNames = ["첫걸음", "사과", "딸기", "바나나", "포도", "자동차", "로켓", "돛단배", "공놀이", "선물", "해바라기", "파도", "구름", "눈사람", "네잎잎", "곰인형", "주사위", "과녁", "연날리기", "성"];
+  var extraPatterns = [
+    "1 2 3 4 5:2 5 4 3 2 1:4",
+    "1 3 5 3 1:2 2 4 6 4 2:2 1:4",
+    "5 5 6 5 3 2 1:2 3 4 5 3 1:4",
+    "1 1 2 3 2 1:2 3 3 4 5 4 3:2 1:4",
+    "1 2 3 5 6 5 3 1:2 2 3 4 6 5 4 2 1:4",
+    "5 4 3 2 1 2 3 4 5:2 3 2 1:4",
+    "1 3 4 5 3 1:2 5 6 8 6 5 3 1:4",
+    "1 2 1 3 2 4 3 5 4 6 5:2 1:4",
+    "3 2 1 3 2 1 4 3 2 5 4 3:2 1:4",
+    "1 5 3 5 1:2 2 6 4 6 2:2 1:4"
+  ];
+  while (songs.length < 100) {
+    var i = songs.length - 31;
+    var pattern = extraPatterns[i % extraPatterns.length];
+    songs.push({
+      icon: extraIcons[i % extraIcons.length],
+      name: extraNames[i % extraNames.length] + (Math.floor(i / extraNames.length) + 1),
+      bpm: 84 + (i % 8) * 4,
+      score: melody(pattern)
+    });
+  }
+  var selectedIndex = 0;
+  var selectedPage = 0;
+  var state = "idle";
+  var startTime = 0;
+  var raf = 0;
+  var score = 0;
+  var hitMap = {};
+  var autoPopMap = {};
+  var audio = null;
+  var travelBeats = 2.65;
+  var notes = [];
+  var listenTimers = [];
+  var speedMultiplier = 1;
+
+  function currentSongData() {
+    return songs[selectedIndex];
+  }
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  function ensureAudio() {
+    if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+    if (audio.state === "suspended") audio.resume();
+  }
+
+  function clearListenTimers() {
+    listenTimers.forEach(function (timer) { clearTimeout(timer); });
+    listenTimers = [];
+  }
+
+  function playNote(n, length) {
+    ensureAudio();
+    var osc = audio.createOscillator();
+    var gain = audio.createGain();
+    osc.type = "triangle";
+    osc.frequency.value = freqs[n - 1];
+    gain.gain.setValueAtTime(0.0001, audio.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.35, audio.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + (length || 0.28));
+    osc.connect(gain).connect(audio.destination);
+    osc.start();
+    osc.stop(audio.currentTime + (length || 0.28));
+  }
+
+  function buildNotes() {
+    notes = [];
+    var beat = 0;
+    currentSongData().score.forEach(function (item, i) {
+      notes.push({ id: i, note: item.n, beat: beat, dur: item.d });
+      beat += item.d;
+    });
+  }
+
+  function beatMs() {
+    return 60000 / (currentSongData().bpm * speedMultiplier);
+  }
+
+  function currentBeat() {
+    return (performance.now() - startTime) / beatMs();
+  }
+
+  function boardMetrics() {
+    var board = $("board");
+    var h = board.clientHeight;
+    var hitBottom = window.matchMedia("(orientation: portrait)").matches ? 108 : 128;
+    return {
+      top: -90,
+      hitY: h - hitBottom - 76,
+      finishY: h - hitBottom + 40
+    };
+  }
+
+  function renderLabels() {
+    $("labels").innerHTML = names.map(function (name, i) {
+      return '<button class="label" data-note="' + (i + 1) + '"><span class="num">' + (i + 1) + '</span><span class="name">' + name + '</span></button>';
+    }).join("");
+    document.querySelectorAll(".label").forEach(function (btn) {
+      btn.addEventListener("pointerdown", function () {
+        press(Number(this.dataset.note));
+      });
+    });
+  }
+
+  function renderSongs() {
+    document.querySelectorAll(".song-icon").forEach(function (btn) {
+      btn.classList.toggle("on", Number(btn.dataset.index) === selectedIndex);
+    });
+  }
+
+  function renderSpeed() {
+    document.querySelectorAll(".speed-btn").forEach(function (btn) {
+      btn.classList.toggle("on", Number(btn.dataset.speed) === speedMultiplier);
+    });
+  }
+
+  function renderSongGrid() {
+    var start = selectedPage * 10;
+    var visible = songs.slice(start, start + 10);
+    $("songGrid").innerHTML = visible.map(function (song, i) {
+      var index = start + i;
+      return '<button class="song-icon" data-index="' + index + '"><span class="icon">' + song.icon + '</span><span class="title">' + song.name + '</span></button>';
+    }).join("");
+    document.querySelectorAll(".song-icon").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        chooseSong(Number(this.dataset.index));
+      });
+    });
+    var pageCount = Math.ceil(songs.length / 10);
+    $("prevPage").textContent = "이전";
+    $("nextPage").textContent = "다음";
+    $("prevPage").disabled = selectedPage === 0;
+    $("nextPage").disabled = selectedPage === pageCount - 1;
+    renderSongs();
+  }
+
+  function draw() {
+    if (state !== "playing") return;
+    var m = boardMetrics();
+    var beat = currentBeat();
+    var html = "";
+    notes.forEach(function (item) {
+      var diff = item.beat - beat;
+      if (diff < -0.85 || diff > travelBeats) return;
+      if (!autoPopMap[item.id] && diff <= 0) {
+        autoPopMap[item.id] = true;
+        boom(item.note);
+      }
+      var y = m.hitY - (diff / travelBeats) * (m.hitY - m.top);
+      var opacity = hitMap[item.id] ? .25 : 1;
+      var height = Math.max(58, Math.min(150, 62 * item.dur));
+      html += '<div class="note ' + colors[item.note - 1] + '" style="--lane:' + item.note + '; height:' + height + 'px; transform:translateY(' + y + 'px); opacity:' + opacity + ';">' + item.note + '</div>';
+    });
+    $("notes").innerHTML = html;
+    $("score").textContent = score + "점";
+
+    var last = notes[notes.length - 1];
+    if (beat > last.beat + last.dur + 1.3) {
+      finish();
+      return;
+    }
+    raf = requestAnimationFrame(draw);
+  }
+
+  function flashLabel(n) {
+    var label = document.querySelector('.label[data-note="' + n + '"]');
+    if (!label) return;
+    label.classList.add("hit");
+    setTimeout(function () { label.classList.remove("hit"); }, 180);
+  }
+
+  function boom(n) {
+    var line = document.querySelector(".hit-line");
+    line.classList.remove("boom");
+    void line.offsetWidth;
+    line.classList.add("boom");
+
+    var burst = document.createElement("div");
+    burst.className = "burst";
+    burst.style.setProperty("--lane", n);
+    var sparks = ["#22ad67", "#ffe45c", "#ff7f87", "#78d7ff", "#b3a3ff", "#ffffff", "#ff9bd8", "#ffc25d"];
+    for (var i = 0; i < 10; i++) {
+      var spark = document.createElement("i");
+      spark.style.setProperty("--angle", (i * 36) + "deg");
+      spark.style.setProperty("--spark", sparks[i % sparks.length]);
+      burst.appendChild(spark);
+    }
+    $("board").appendChild(burst);
+    setTimeout(function () { burst.remove(); }, 680);
+
+    var word = document.createElement("div");
+    word.className = "pop-word";
+    word.style.setProperty("--lane", n);
+    word.textContent = "팡!";
+    $("board").appendChild(word);
+    setTimeout(function () { word.remove(); }, 680);
+
+    flashLabel(n);
+  }
+
+  function nearestNote(n) {
+    var beat = currentBeat();
+    var best = null;
+    notes.forEach(function (item) {
+      if (hitMap[item.id] || item.note !== n) return;
+      var gap = Math.abs(item.beat - beat);
+      if (!best || gap < best.gap) best = { item: item, gap: gap };
+    });
+    return best;
+  }
+
+  function press(n) {
+    playNote(n, .22);
+    flashLabel(n);
+    if (state !== "playing") return;
+    var best = nearestNote(n);
+    if (best && best.gap <= .42) {
+      hitMap[best.item.id] = true;
+      score += best.gap <= .18 ? 20 : 10;
+      boom(n);
+    }
+  }
+
+  function countdownThenPlay() {
+    var ready = $("ready");
+    $("board").classList.remove("playing");
+    var steps = ["3", "2", "1", "시작!"];
+    var i = 0;
+    ready.style.display = "grid";
+    function tick() {
+      ready.innerHTML = steps[i];
+      playNote(Math.min(i + 1, 5), .16);
+      i += 1;
+      if (i < steps.length) {
+        setTimeout(tick, 560);
+      } else {
+        setTimeout(function () {
+          ready.style.display = "none";
+          state = "playing";
+          $("board").classList.add("playing");
+          score = 0;
+          hitMap = {};
+          autoPopMap = {};
+          startTime = performance.now() + travelBeats * beatMs();
+          cancelAnimationFrame(raf);
+          draw();
+        }, 420);
+      }
+    }
+    tick();
+  }
+
+  function start() {
+    ensureAudio();
+    clearListenTimers();
+    buildNotes();
+    state = "countdown";
+    $("finish").classList.remove("on");
+    $("board").classList.remove("playing");
+    $("notes").innerHTML = "";
+    $("score").textContent = "0점";
+    countdownThenPlay();
+  }
+
+  function listen() {
+    ensureAudio();
+    cancelAnimationFrame(raf);
+    clearListenTimers();
+    state = "listen";
+    $("ready").style.display = "grid";
+    $("ready").innerHTML = "들어봐요<small>숫자가 차례로 나와요</small>";
+    $("notes").innerHTML = "";
+    var elapsed = 0;
+    currentSongData().score.forEach(function (item, i) {
+      var delay = elapsed;
+      elapsed += item.d * (430 / speedMultiplier);
+      listenTimers.push(setTimeout(function () {
+        $("ready").innerHTML = item.n + '<small>' + names[item.n - 1] + '</small>';
+        playNote(item.n, Math.max(.25, item.d * .24));
+        flashLabel(item.n);
+        if (i === currentSongData().score.length - 1) {
+          listenTimers.push(setTimeout(function () {
+            $("ready").innerHTML = "이제 시작!";
+          }, 420));
+        }
+      }, delay));
+    });
+  }
+
+  function finish() {
+    cancelAnimationFrame(raf);
+    clearListenTimers();
+    state = "idle";
+    $("board").classList.remove("playing");
+    $("notes").innerHTML = "";
+    $("finishText").textContent = score + "점";
+    $("finish").classList.add("on");
+    $("ready").style.display = "grid";
+    $("ready").innerHTML = "피아노 앞에<br>패드를 놓아요<small>화면을 터치하세요</small>";
+  }
+
+  function chooseSong(index) {
+    selectedIndex = (index + songs.length) % songs.length;
+    selectedPage = Math.floor(selectedIndex / 10);
+    cancelAnimationFrame(raf);
+    clearListenTimers();
+    state = "idle";
+    $("board").classList.remove("playing");
+    score = 0;
+    hitMap = {};
+    autoPopMap = {};
+    $("notes").innerHTML = "";
+    $("score").textContent = "0점";
+    $("ready").style.display = "grid";
+    $("ready").innerHTML = currentSongData().name + '<small>화면을 터치하세요</small>';
+    renderSongGrid();
+    renderSongs();
+  }
+
+  function demoStart() {
+    buildNotes();
+    state = "playing";
+    score = 0;
+    hitMap = {};
+    autoPopMap = {};
+    $("ready").style.display = "none";
+    $("board").classList.add("playing");
+    startTime = performance.now() + travelBeats * beatMs();
+    cancelAnimationFrame(raf);
+    draw();
+  }
+
+  $("prevPage").addEventListener("click", function () {
+    if (selectedPage === 0) return;
+    selectedPage -= 1;
+    renderSongGrid();
+  });
+  $("nextPage").addEventListener("click", function () {
+    if (selectedPage >= Math.ceil(songs.length / 10) - 1) return;
+    selectedPage += 1;
+    renderSongGrid();
+  });
+  document.querySelectorAll(".speed-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      speedMultiplier = Number(this.dataset.speed);
+      renderSpeed();
+      if (state === "playing" || state === "countdown") start();
+    });
+  });
+  $("startBtn").addEventListener("click", start);
+  $("listenBtn").addEventListener("click", listen);
+  $("againBtn").addEventListener("click", function () {
+    $("finish").classList.remove("on");
+  });
+  $("board").addEventListener("pointerdown", function (e) {
+    if (e.target.closest(".label")) return;
+    if (state === "idle" || state === "listen") start();
+  });
+  window.addEventListener("keydown", function (e) {
+    if (/^[1-7]$/.test(e.key)) press(Number(e.key));
+    if (e.key === " ") start();
+  });
+
+  renderLabels();
+  renderSongGrid();
+  renderSongs();
+  renderSpeed();
+  buildNotes();
+  if (new URLSearchParams(location.search).get("demo") === "1") {
+    setTimeout(demoStart, 200);
+  }
+  if ("serviceWorker" in navigator && location.protocol !== "file:") {
+    navigator.serviceWorker.register("sw.js").catch(function () {});
+  }
+  document.addEventListener("gesturestart", function (event) {
+    event.preventDefault();
+  });
+</script>
+</body>
+</html>

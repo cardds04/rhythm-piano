@@ -1,0 +1,19 @@
+{
+  "name": "리듬피아노",
+  "short_name": "리듬피아노",
+  "description": "패드를 피아노 앞에 놓고 숫자 블록에 맞춰 연주하는 리듬 피아노",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#fff3c4",
+  "theme_color": "#fff3c4",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
